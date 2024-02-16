@@ -33,7 +33,9 @@ router.post('/create', (req, res) => {
 
 // GET tweets
 router.get('/', (req, res) => {
-    Tweet.find().then(data => {
+    Tweet.find()
+    .populate('author')
+    .then(data => {
       res.json({ tweets: data });
     })
   });
