@@ -44,6 +44,7 @@ function extractHashtags(content) {
 router.get('/', (req, res) => {
     Tweet.find()
     .populate('author')
+    .populate("isLiked")
     .then(data => {
       res.json({ tweets: data });
     })
@@ -75,8 +76,11 @@ router.put("/isActive", (req, res) => {
 
 // PUT tweet (add or remove like)
 router.put('/like/:tweetId', async (req, res) => {
+
+  const userinfos = await User.findOne({ token: req.body.token })
+
+  const userId = userinfos.id;
   const tweetId = req.params.tweetId;
-  const userId = req.body.likerId;
   let updatedTweet;
   const tweet = await Tweet.findById(tweetId);
 
