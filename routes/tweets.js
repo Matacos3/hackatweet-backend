@@ -78,7 +78,7 @@ router.put("/isActive", (req, res) => {
 router.put('/like/:tweetId', async (req, res) => {
 
   const userinfos = await User.findOne({ token: req.body.token })
-
+  console.log(userinfos)
   const userId = userinfos.id;
   const tweetId = req.params.tweetId;
   let updatedTweet;
