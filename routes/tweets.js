@@ -42,10 +42,12 @@ function extractHashtags(content) {
 
 // GET tweets
 router.get('/', (req, res) => {
-  Tweet.find().then(data => {
-    res.json({ tweets: data });
-  })
-});
+    Tweet.find()
+    .populate('author')
+    .then(data => {
+      res.json({ tweets: data });
+    })
+  });
 
 
 // GET tweets by Hashtags
