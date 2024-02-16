@@ -4,10 +4,14 @@ const Tweet = require('../models/tweet');
 
 //POST create tweet
 router.post('/create', (req, res) => {
+    const content = req.body.content;
+    const author = req.body.author;
+    const hashtags = extractHashtags(content);
+
     const newTweet = new Tweet({
-      content: req.body.content,
-      hastag: req.body.hastag,
-      author: req.body.author
+      content: content,
+      hashtag: hashtags,
+      author: author
     });
   
     newTweet.save().then(() => {
@@ -17,6 +21,15 @@ router.post('/create', (req, res) => {
     });
   });
 
+  function extractHashtags(content) {
+    const regex = /#(\w+)/g;
+    const matches = content.match(regex);
+    if (matches) {
+        return matches.map(match => match.substring(1));
+    } else {
+        return [];
+    }
+  }
 
 // GET tweets
 router.get('/', (req, res) => {
@@ -27,51 +40,48 @@ router.get('/', (req, res) => {
 
 
 // GET tweets by Hashtags
+router.get('/hashtag/:hashtagId', (req, res) => {
+    Tweet.find({hashtag: req.params.hashtagId}).then(data => {
+        if (data.length > 0) {
+            res.json({result: true, total: data.length, tweets: data});
+        } else {
+            res.json({result: false, error: `No tweets matching with #${req.params.hashtagId}`});
+        }
+    });
+});
 
-
-
-
-
-// PUT tweet (update isActive)
+// PUT tweet (update isActive value to false, to hide/trash tweet from last tweet list)
 router.put("/isActive", (req, res) => {
     Tweet.updateOne (
    {tweet : req.body.id},
    {isActive: false}
 ).then(() => {
-
    Tweet.find().then(data => {
        res.json({ Tweet : data.Tweet });
 })})
    });
 
+// PUT tweet (add or remove like)
+router.put('/like/:tweetId', async (req, res) => {
+    const tweetId = req.params.tweetId;
+    const userId = req.body.likerId;
+    let updatedTweet;
+    const tweet = await Tweet.findById(tweetId);
+  
+      if (!tweet) {
+        return res.status(404).json({ message: 'Tweet not found' });
+      }
 
-// PUT tweet (update like)
-
-router.put("/like", (req, res) => {
-
-    Tweet.findOne(data.isLiked)
-    .then(data => {
-      if (data.isLiked.includes(req.body.id)) {
-        Tweet.updateOne (
-            {id : req.body.id},
-            {like: {/*MODIF EN COURS*/} }
-         ).then(() => {
-            Tweet.find().then(data => {
-                res.json({ Tweet : data.Tweet });
-         })})
+      const index = tweet.isLiked.indexOf(userId);
+      if (index === -1) {
+        tweet.isLiked.push(userId);
       } else {
-        Tweet.updateOne (
-            {id : req.body.id},
-            {like: req.body.id}
-         ).then(() => {
-            Tweet.find().then(data => {
-                res.json({ Tweet : data.Tweet });
-         })})
-            };
-    })
-    .catch(error => {
-      console.error('Error occurred:', error);
-    });
-});
+        tweet.isLiked.splice(index, 1);
+      }
+
+      updatedTweet = await tweet.save();
+      res.json(updatedTweet);
+  });
+   
 
 module.exports = router;
