@@ -42,7 +42,7 @@ function extractHashtags(content) {
 
 // GET tweets
 router.get('/', (req, res) => {
-    Tweet.find()
+    Tweet.find({isActive:true})
     .populate('author')
     .populate("isLiked")
     .then(data => {
@@ -63,13 +63,13 @@ router.get('/hashtag/:hashtagId', (req, res) => {
 });
 
 // PUT tweet (update isActive value to false, to hide/trash tweet from last tweet list)
-router.put("/isActive", (req, res) => {
+router.put("/isActive/:tweetId", (req, res) => {
   Tweet.updateOne(
-    { tweet: req.body.id },
+    { _id: req.params.tweetId},
     { isActive: false }
   ).then(() => {
-    Tweet.find().then(data => {
-      res.json({ Tweet: data.Tweet });
+    Tweet.find({isActive : false}).then(data => {
+      res.json({ Tweet: data });
     })
   })
 });
